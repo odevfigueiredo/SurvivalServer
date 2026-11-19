@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0b1018">
+  <title>Survival Server — Biblioteca Offline</title>
+  <link rel="stylesheet" href="/app.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <div class="app-shell" id="shell" hidden>
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-icon">S<span class="brand-dot">.</span></div>
+        <div class="brand-copy"><strong>SURVIVAL<span>SERVER</span></strong><small>SEU CONHECIMENTO. SEM INTERNET.</small></div>
+      </div>
+      <p class="nav-caption">MENU PRINCIPAL</p>
+      <nav class="navigation" aria-label="Menu principal">
+        <button class="nav-link active" data-page="home"><span class="nav-emoji">◫</span> Visão geral</button>
+        <button class="nav-link" data-page="library"><span class="nav-emoji">▤</span> Biblioteca</button>
+        <button class="nav-link" data-page="emergency"><span class="nav-emoji">✚</span> Plano familiar</button>
+        <button class="nav-link admin-only" data-page="health" hidden><span class="nav-emoji">⛨</span> Integridade e auditoria</button>
+        <button class="nav-link" data-page="guide"><span class="nav-emoji">◈</span> Como conectar</button>
+      </nav>
+      <p class="nav-caption cat-label">ACESSO RÁPIDO</p>
+      <nav class="navigation" id="quickCats" aria-label="Categorias"></nav>
+      <div class="sidebar-bottom">
+        <div class="status-panel"><span class="glow-dot"></span><div><strong>REDE LOCAL ATIVA</strong><small>Sem serviços externos</small></div></div>
+        <div class="account"><div class="avatar" id="avatar">A</div><div class="account-copy"><strong id="username">—</strong><small id="userrole">—</small></div><button class="icon-btn" id="logout" title="Sair da conta" aria-label="Sair da conta">↪</button></div>
+      </div>
+    </aside>
+    <div class="main-area">
+      <header class="topbar">
+        <button class="icon-btn mobile-menu" id="menuBtn" aria-label="Abrir menu">☰</button>
+        <div class="breadcrumb">CENTRAL / <span id="breadcrumb">VISÃO GERAL</span></div>
+        <div class="top-actions"><span class="offline-badge"><span class="mini-dot"></span> 100% OFFLINE</span><span id="clock" class="clock"></span></div>
+      </header>
+      <main class="content">
+        <section id="page-home" class="page active">
+          <div class="intro-line">SUA CENTRAL DE CONHECIMENTO LOCAL</div>
+          <div class="intro-grid">
+            <div><h1>Prepare-se para <span>qualquer cenário.</span></h1><p>Seus manuais, documentos, mapas e informações importantes, disponíveis para sua família mesmo quando a internet não está.</p></div>
+            <div class="hero-seal" aria-hidden="true"><span>◈</span><small>SURVIVAL<br>READY</small></div>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card"><div class="stat-icon red">▤</div><span>ARQUIVOS NA BASE</span><strong id="statFiles">0</strong><small>Materiais disponíveis</small></div>
+            <div class="stat-card"><div class="stat-icon amber">▣</div><span>ESPAÇO UTILIZADO</span><strong id="statBytes">0 B</strong><small>Armazenamento local</small></div>
+            <div class="stat-card"><div class="stat-icon green">⌁</div><span>STATUS DE ACESSO</span><strong>ONLINE LOCAL</strong><small>Internet não é necessária</small></div>
+          </div>
+          <div class="section-row"><div><h2>Biblioteca de sobrevivência</h2><p>Explore seus arquivos por categoria</p></div><button class="text-btn" data-go="library">Ver biblioteca completa →</button></div>
+          <div class="category-grid" id="categoryGrid"></div>
+          <div class="feature-grid">
+            <div class="feature-card"><div class="feature-head"><span class="feature-ico">⌘</span><span class="eyebrow">COMO FUNCIONA</span></div><h3>Um servidor. Vários aparelhos.</h3><p>Conecte celulares e notebooks ao mesmo Wi-Fi local e abra o endereço do servidor no navegador.</p><button class="text-btn" data-go="guide">Ver instruções →</button></div>
+            <div class="feature-card secondary"><div class="feature-head"><span class="feature-ico">⛨</span><span class="eyebrow">PRIVACIDADE</span></div><h3>Dados guardados com você.</h3><p>Sem contas na nuvem, rastreamento ou dependência de APIs. Use apenas uma rede confiável: o HTTP local não cifra a conexão.</p></div>
+          </div>
+        </section>
+        <section id="page-library" class="page">
+          <div class="section-row library-head"><div><div class="intro-line">ARQUIVOS LOCAIS</div><h1>Sua <span>biblioteca.</span></h1><p>Pesquise pelo nome, descrição ou pelo conteúdo de textos e arquivos Markdown.</p></div><button id="uploadButton" class="primary-button admin-only" hidden>＋ Adicionar arquivo</button></div>
+          <div class="filters"><label class="search"><span aria-hidden="true">⌕</span><input id="searchInput" type="search" placeholder="Pesquisar arquivos, guias e manuais..." autocomplete="off" aria-label="Pesquisar arquivos"></label><select id="categoryFilter" aria-label="Filtrar categoria"><option value="Todas">Todas as categorias</option></select></div>
+          <div id="libraryNotice" class="info-notice" role="alert" hidden></div>
+          <div class="library-meta"><strong id="resultCount" role="status"></strong></div>
+          <nav id="filesPagination" class="files-pagination" aria-label="Páginas da biblioteca" hidden>
+            <button type="button" id="filesPrevious" class="secondary-button" disabled>Anterior</button>
+            <span id="filesPageStatus"></span>
+            <button type="button" id="filesNext" class="secondary-button" disabled>Próxima</button>
+          </nav>
+          <div id="filesList" class="files-list"></div>
+          <div id="emptyState" class="empty-state" hidden><div class="empty-symbol">▤</div><h3>Nenhum arquivo encontrado</h3><p>Experimente alterar os filtros. Administradores podem adicionar materiais ao acervo.</p></div>
+        </section>
+        <section id="page-emergency" class="page">
+          <div class="intro-line">PLANEJAMENTO COMPARTILHADO</div>
+          <h1>Plano de <span>emergência.</span></h1>
+          <p class="lead">Registre contatos, locais de encontro e ações prioritárias. A família pode consultar o plano na rede local mesmo sem internet.</p>
+          <div class="warning-box"><strong>Privacidade na rede local</strong><p>Dados deste painel trafegam por HTTP sem criptografia. Não registre senhas, números de documentos ou dados médicos sigilosos aqui. Para documentos privados, use o Arca Offline.</p></div>
+          <div class="emergency-grid" id="emergencyCards"></div>
+        </section>
+        <section id="page-health" class="page admin-only" hidden>
+          <div class="intro-line">ADMINISTRAÇÃO DO SERVIDOR</div>
+          <h1>Integridade e <span>diagnóstico.</span></h1>
+          <p class="lead">Verifique a saúde do banco de dados, espaço disponível e hashes dos arquivos armazenados.</p>
+          <div class="stat-card" id="diagnosticInfo" style="margin:18px 0">Diagnóstico ainda não carregado.</div>
+          <div class="action-row"><button class="primary-button" id="refreshDiagnostic">Atualizar diagnóstico</button><button class="secondary-button" id="verifyFiles">Verificar SHA-256 de todos os arquivos</button><button class="secondary-button" id="exportManifest">Exportar manifesto JSON</button></div>
+          <pre id="verificationOutput" class="diagnostic-output" aria-live="polite">Nenhuma verificação executada nesta sessão.</pre>
+          <h2>Últimas atividades administrativas</h2><div id="auditList" class="audit-list"></div>
+        </section>
+        <section id="page-guide" class="page">
+          <div class="intro-line">ACESSO ENTRE APARELHOS</div><h1>Conecte sua <span>família.</span></h1><p class="lead">O servidor funciona sem internet, mas os dispositivos devem estar conectados à mesma rede local.</p>
+          <div class="step-grid">
+            <article class="step"><span>01</span><h3>Inicie o servidor</h3><p>No computador ou Raspberry Pi, execute <code>python server.py run --lan</code>. Deixe o equipamento ligado.</p></article>
+            <article class="step"><span>02</span><h3>Entre no mesmo Wi-Fi</h3><p>Conecte os celulares e notebooks ao mesmo roteador ou ponto de acesso local. O roteador não precisa ter internet.</p></article>
+            <article class="step"><span>03</span><h3>Abra o endereço</h3><p>No navegador de cada celular, digite o endereço IPv4 mostrado no terminal do servidor, como <code>http://192.168.1.10:8765</code>.</p></article>
+            <article class="step"><span>04</span><h3>Use a conta de leitura</h3><p>O usuário <code>familia</code>, se criado, pode consultar e baixar arquivos. Somente administradores podem adicionar ou apagar.</p></article>
+          </div>
+          <div class="address-panel"><div><small>ENDEREÇO DESTA SESSÃO</small><strong id="currentUrl">—</strong><p>Se estiver em outro aparelho, o IP pode ser diferente. Use o IP exibido no servidor.</p></div><button class="secondary-button" id="copyAddress">Copiar</button></div>
+          <div class="warning-box"><strong>⚠ Segurança importante</strong><p>Este protótipo funciona por HTTP na rede local: senhas e dados em trânsito não têm criptografia de transporte. Use rede Wi-Fi confiável com WPA2/WPA3 e não exponha a porta 8765 à internet. Não coloque senhas bancárias ou documentos sensíveis neste servidor: para isso, prefira um cofre local criptografado.</p></div>
+          <div class="section-row"><h2>Wikipédia offline com ZIM</h2></div><p>Arquivos <code>.zim</code> podem ser importados na biblioteca e baixados em outros aparelhos. Para ler os artigos diretamente no navegador da rede, instale e execute o <strong>kiwix-serve</strong> separadamente, apontando para a pasta que contém os arquivos ZIM originais.</p>
+          <div class="cli-block"><code>kiwix-serve --port=8080 /caminho/para/arquivos.zim</code><span>Exemplo ilustrativo no Linux</span></div>
+        </section>
+      </main>
+      <footer class="footer"><span>SURVIVAL SERVER <b>0.3</b></span><span>Desenvolvido para uso offline · Python + SQLite</span></footer>
+    </div>
+  </div>
+
+  <section class="login-screen" id="loginScreen">
+    <div class="login-glow"></div><div class="login-card">
+      <div class="login-logo">S<span>.</span></div>
+      <div class="intro-line">SISTEMA AUTÔNOMO · ACESSO LOCAL</div>
+      <h1>Sobrevivência começa com <span>preparação.</span></h1>
+      <p>Entre para acessar sua biblioteca de conhecimento e documentos da rede local.</p>
+      <form id="loginForm" method="post" action="/api/login">
+        <label>USUÁRIO<input id="loginUsername" name="username" value="familia" autocomplete="username" required maxlength="32"></label>
+        <label>SENHA<input id="loginPassword" name="password" type="password" autocomplete="current-password" required></label>
+        <p class="form-error" id="loginError" role="alert" hidden></p>
+        <button class="primary-button login-submit" type="submit">Entrar no servidor <span>→</span></button>
+      </form>
+      <div class="login-foot"><span class="glow-dot"></span> SEM NUVEM · SEM INTERNET · REDE LOCAL</div>
+    </div>
+  </section>
+
+  <div class="modal-backdrop" id="uploadModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-head"><div><div class="intro-line">GESTÃO DO ACERVO</div><h2 id="modalTitle">Adicionar arquivos</h2></div><button class="icon-btn" id="closeUpload" aria-label="Fechar">✕</button></div>
+      <form id="uploadForm">
+        <label class="dropzone" id="dropzone"><span>⇪</span><strong>Selecione ou arraste arquivos aqui</strong><small>Arquivos grandes: use o comando import-file no computador</small><input type="file" id="uploadFiles" aria-describedby="uploadSelection" multiple required></label>
+        <p class="upload-selection" id="uploadSelection" role="status" hidden></p>
+        <label>Categoria<select id="uploadCategory"></select></label>
+        <label>Descrição<input id="uploadDescription" maxlength="500" placeholder="Ex.: Manual de primeiros socorros"></label>
+        <progress id="uploadProgress" aria-label="Progresso do envio" value="0" max="1" hidden></progress>
+        <p class="form-error" id="uploadError" role="alert" hidden></p>
+        <div class="modal-actions"><button type="button" class="secondary-button" id="cancelUpload">Cancelar</button><button type="submit" class="primary-button" id="startUpload">Enviar arquivos</button></div>
+      </form>
+    </div>
+  </div>
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+</body>
+</html>

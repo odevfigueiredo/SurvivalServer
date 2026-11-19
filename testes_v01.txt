@@ -1,0 +1,47 @@
+test_backup_rejects_tampered_content (test_server.CoreTests.test_backup_rejects_tampered_content) ... ok
+test_backup_restore (test_server.CoreTests.test_backup_restore) ... ok
+test_import_search_verify (test_server.CoreTests.test_import_search_verify) ... ok
+test_invalid_paths_metadata (test_server.CoreTests.test_invalid_paths_metadata) ... ok
+test_password_roles (test_server.CoreTests.test_password_roles) ... ok
+test_backup_rejects_tampered_content (test_server.HttpTests.test_backup_rejects_tampered_content) ... ok
+test_backup_restore (test_server.HttpTests.test_backup_restore) ... ok
+test_import_search_verify (test_server.HttpTests.test_import_search_verify) ... ok
+test_invalid_paths_metadata (test_server.HttpTests.test_invalid_paths_metadata) ... ok
+test_login_permissions_upload_stream_range (test_server.HttpTests.test_login_permissions_upload_stream_range) ... ok
+test_origin_and_host (test_server.HttpTests.test_origin_and_host) ... ok
+test_password_roles (test_server.HttpTests.test_password_roles) ... ok
+test_reader_no_upload_and_csrf (test_server.HttpTests.test_reader_no_upload_and_csrf) ... ok
+test_unauthorized_download_and_static_assets (test_server.HttpTests.test_unauthorized_download_and_static_assets) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 6.728s
+
+OK
+[12:49:01] 127.0.0.1 "GET /api/stats HTTP/1.1" 401 -
+[12:49:01] 127.0.0.1 "POST /api/login HTTP/1.1" 401 -
+[12:49:01] 127.0.0.1 "POST /api/login HTTP/1.1" 200 -
+[12:49:01] 127.0.0.1 "GET /api/me HTTP/1.1" 200 -
+[12:49:01] 127.0.0.1 "POST /api/files/upload?filename=teste.txt&category=Guias&description=Teste HTTP/1.1" 201 -
+[12:49:01] 127.0.0.1 "GET /api/files?q=01234 HTTP/1.1" 200 -
+[12:49:01] 127.0.0.1 "GET /api/files/cd0b66446f7bf9ccffaa8593344770c7/download HTTP/1.1" 200 -
+[12:49:01] 127.0.0.1 "GET /api/files/cd0b66446f7bf9ccffaa8593344770c7/view HTTP/1.1" 206 -
+[12:49:01] 127.0.0.1 "PUT /api/files/cd0b66446f7bf9ccffaa8593344770c7/metadata HTTP/1.1" 200 -
+[12:49:01] 127.0.0.1 "DELETE /api/files/cd0b66446f7bf9ccffaa8593344770c7 HTTP/1.1" 200 -
+[12:49:01] 127.0.0.1 "GET /api/files/cd0b66446f7bf9ccffaa8593344770c7/download HTTP/1.1" 404 -
+[12:49:02] 127.0.0.1 "POST /api/login HTTP/1.1" 200 -
+[12:49:02] 127.0.0.1 "GET /api/me HTTP/1.1" 200 -
+[12:49:02] 127.0.0.1 "POST /api/logout HTTP/1.1" 403 -
+[12:49:02] 127.0.0.1 "GET / HTTP/1.1" 200 -
+[12:49:03] 127.0.0.1 "POST /api/login HTTP/1.1" 200 -
+[12:49:03] 127.0.0.1 "GET /api/me HTTP/1.1" 200 -
+[12:49:03] 127.0.0.1 "POST /api/files/upload?filename=x.txt HTTP/1.1" 403 -
+[12:49:03] 127.0.0.1 "GET /api/stats HTTP/1.1" 200 -
+[12:49:03] 127.0.0.1 "POST /api/logout HTTP/1.1" 403 -
+[12:49:04] 127.0.0.1 "GET /api/files/6ae0966284202348e9ca817aaf261595/download HTTP/1.1" 401 -
+[12:49:04] 127.0.0.1 "GET / HTTP/1.1" 200 -
+[12:49:04] 127.0.0.1 "GET /app.css HTTP/1.1" 200 -
+[12:49:04] 127.0.0.1 "GET /app.js HTTP/1.1" 200 -
+[12:49:04] 127.0.0.1 "GET /api/health HTTP/1.1" 200 -
+[12:49:04] 127.0.0.1 "POST /api/login HTTP/1.1" 200 -
+[12:49:04] 127.0.0.1 "GET /api/me HTTP/1.1" 200 -
+[12:49:04] 127.0.0.1 "GET /api/files/6ae0966284202348e9ca817aaf261595/download HTTP/1.1" 200 -
