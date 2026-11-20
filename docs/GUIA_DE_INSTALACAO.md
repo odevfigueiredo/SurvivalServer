@@ -31,7 +31,7 @@ Servidor de biblioteca e arquivos para **rede local sem internet**, acessível p
 2. Extraia o ZIP do projeto.
 3. Dê dois cliques em **`iniciar_windows.bat`** e crie uma senha de administrador de pelo menos 10 caracteres. Crie também uma senha diferente para a conta de leitura `familia`.
 4. O terminal imprimirá o endereço de acesso local, por exemplo **`http://192.168.1.10:8765`**.
-5. Conecte os celulares ao **mesmo Wi-Fi** do computador; abra o endereço pelo navegador.
+5. Conecte os celulares ao **mesmo Wi-Fi** do computador e abra o endereço pelo navegador. Na aba **Acesso na rede**, o portal também mostra a URL e um QR para compartilhar com outros aparelhos.
 6. Se o firewall do Windows solicitar autorização, permita **apenas em redes Privadas**, não em redes Públicas.
 
 Se preferir executar manualmente no terminal dentro da pasta do projeto:
@@ -71,6 +71,8 @@ No Linux com NetworkManager, algumas placas Wi-Fi compatíveis com modo AP podem
 ## Utilização
 
 Entre como `admin` para adicionar e excluir arquivos. Entre como `familia` (se configurada) para buscar e baixar.
+
+Administradores podem criar contas de leitura ou de administração na aba **Contas**. A troca de senha e a exclusão encerram as sessões daquela conta em todos os aparelhos. A troca da própria senha exige um novo login.
 
 ### Importar um ZIM grande
 

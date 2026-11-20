@@ -1,0 +1,157 @@
+:root {
+  --bg: #111518;
+  --panel: #181d20;
+  --panel2: #202629;
+  --border: #343d40;
+  --text: #f4f4f0;
+  --muted: #a9b4b6;
+  --red: #ff9b77;
+  --green: #72d6a9;
+}
+
+.sidebar {
+  background: #12171a;
+  border-color: #2c3336;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.brand { padding-bottom: 30px; }
+.brand-copy strong { font-size: 15px; letter-spacing: -.25px; }
+.brand-copy small { color: var(--muted); font-size: 11px; letter-spacing: 0; }
+.brand-icon, .login-logo { background: #372822; border-color: #654136; }
+.brand-icon { position: relative; }
+.brand-dot { position: absolute; right: 7px; bottom: 5px; font-size: 20px; line-height: 1; }
+.nav-caption { color: var(--muted); }
+.nav-link { color: #bdc9ca; min-height: 41px; padding: 9px 11px; }
+.nav-link:hover { background: #242b2e; }
+.nav-link.active { color: #ffad8e; background: #30231f; border-color: #614135; }
+.nav-emoji { font-size: 17px; }
+.sidebar-bottom { padding-top: 20px; }
+.account { border-color: var(--border); margin-top: 0; }
+.avatar { background: #3c2b24; color: var(--red); }
+.topbar { height: 65px; border-color: #2c3336; }
+.breadcrumb, .clock, .footer { color: var(--muted); }
+.footer { border-color: #2c3336; }
+.footer b, h1 span, .text-btn, .intro-line { color: var(--red); }
+.content { padding-top: clamp(22px, 3vw, 42px); }
+.primary-button, .secondary-button { min-height: 40px; }
+.primary-button { color: #1d110c; background: #ff9b77; border-color: #ff9b77; }
+.primary-button:hover { background: #ffb599; }
+.secondary-button { color: var(--text); background: #252b2d; border-color: #465052; }
+.secondary-button:hover { background: #30383b; }
+:is(button, a, input, select, textarea, summary):focus-visible {
+  outline: 2px solid #ffbc9e;
+  outline-offset: 3px;
+}
+.search:focus-within { border-color: var(--red); }
+.nav-scrim { display: none; }
+
+.portal-hero {
+  display: flex;
+  align-items: center;
+  min-height: 315px;
+  padding: clamp(25px, 4.3vw, 58px);
+  border: 1px solid #3d3b36;
+  border-radius: 18px;
+  background: linear-gradient(90deg, #151719 5%, #151719ed 32%, #15171922 76%),
+    #151719 url('/images/network-hero.webp') right 50% / cover no-repeat;
+}
+.portal-hero-content { max-width: min(100%, 560px); }
+.portal-hero h1 { font-size: clamp(37px, 4.7vw, 69px); line-height: .99; letter-spacing: -.053em; }
+.portal-hero h1 span { display: block; }
+.portal-hero p { max-width: 34ch; color: #d0d5d2; margin: 18px 0 25px; font-size: 15px; }
+.portal-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.portal-actions button { white-space: normal; }
+.portal-hero .secondary-button { background: #202527; }
+.stats-grid { margin-top: 18px; }
+.stat-card, .category-card, .file-card {
+  color: var(--text);
+  background: var(--panel);
+  border-color: var(--border);
+}
+.stat-card { min-height: 128px; }
+.stat-card > span, .stat-card small, .category-card small { color: var(--muted); }
+.stat-card .stat-icon.red, .category-card .glyph { color: #ffab8f; }
+.stat-card .stat-icon.red { background: #382622; }
+.stat-card .stat-icon.amber { color: #f7c492; }
+.stat-card .stat-icon.green { color: var(--green); }
+.portal-stat-link { text-align: left; }
+.portal-stat-link strong span { color: var(--red); }
+.portal-stat-link:hover, .category-card:hover { background: #20272a; border-color: #95604c; }
+.section-row { margin-top: 35px; }
+.library-head { margin-top: 0; }
+.library-head p, .section-row p, .lead, .file-info p, .file-info small { color: var(--muted); }
+.category-card { min-height: 105px; }
+.category-card .glyph { margin-bottom: 8px; }
+.portal-page-heading { margin-bottom: 26px; }
+.portal-page-heading .lead { margin-bottom: 0; }
+
+.portal-details {
+  margin-top: 16px;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+}
+.portal-details summary { cursor: pointer; padding: 14px 0; font-weight: 700; }
+.portal-details ul { color: var(--muted); margin: 0 0 20px; padding-left: 20px; line-height: 1.7; }
+.portal-details code { color: var(--red); overflow-wrap: anywhere; }
+.portal-local-note { color: var(--muted); }
+
+.accounts-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.portal-card { min-width: 0; padding: 23px; border: 1px solid var(--border); border-radius: 15px; background: var(--panel); }
+.portal-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 18px; }
+.portal-card-heading h2, .portal-dialog h2 { margin: 0; font-size: 19px; }
+.portal-form { display: grid; gap: 9px; }
+.portal-form label { font-weight: 700; }
+.portal-form label:not(:first-child) { margin-top: 7px; }
+.portal-form input, .portal-form select {
+  min-width: 0;
+  min-height: 44px;
+  border: 1px solid #515b5d;
+  border-radius: 8px;
+  color: var(--text);
+  background: #111719;
+  font-size: 16px;
+  padding: 10px 12px;
+}
+.portal-form small, .portal-dialog p { color: var(--muted); line-height: 1.5; }
+.portal-form > [type='submit'], .portal-form .portal-actions { margin-top: 10px; justify-self: start; }
+.account-rows { display: grid; list-style: none; margin: 0; padding: 0; }
+.account-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 0; border-top: 1px solid var(--border); }
+.account-initials { display: grid; flex: none; place-items: center; width: 38px; height: 38px; border-radius: 9px; background: #3a2a23; color: var(--red); font-weight: 800; }
+.account-info { flex: 1 1 95px; min-width: 0; overflow-wrap: anywhere; }
+.account-info strong, .account-info small { display: block; }
+.account-info small { color: var(--muted); margin-top: 4px; }
+.account-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.account-actions button { min-height: 38px; padding: 7px 10px; }
+.account-delete { color: #ffae9e; }
+.accounts-status { padding: 12px 15px; border: 1px solid var(--border); border-radius: 10px; background: var(--panel2); }
+.portal-dialog { width: min(94vw, 425px); max-height: 92dvh; border: 1px solid #596365; border-radius: 15px; background: var(--panel); color: var(--text); padding: 24px; }
+.portal-dialog::backdrop { background: #07090bc9; }
+
+@media (max-width: 1000px) {
+  .accounts-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 740px) {
+  .sidebar { visibility: hidden; height: 100dvh; }
+  .sidebar.open { visibility: visible; }
+  .nav-scrim { display: block; position: fixed; inset: 0; z-index: 14; padding: 0; background: #050708ad; border: 0; }
+  .topbar { height: 61px; }
+  .mobile-menu { min-width: 40px; min-height: 42px; }
+  .portal-hero {
+    align-items: end;
+    min-height: 355px;
+    background: linear-gradient(0deg, #151719 18%, #151719df 46%, #15171912 100%),
+      #151719 url('/images/network-hero.webp') 72% top / auto 84% no-repeat;
+  }
+  .stats-grid { gap: 9px; }
+  .stat-card { min-height: 125px; }
+  .section-row { flex-wrap: wrap; }
+  .category-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .category-card { overflow-wrap: anywhere; }
+  .portal-card { padding: 15px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sidebar, .category-card { transition: none; }
+}

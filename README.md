@@ -4,11 +4,17 @@
   <p><strong>Biblioteca digital, plano familiar e ferramentas de recuperação para acessar informações essenciais sem internet.</strong></p>
   <p>
     <img src="https://img.shields.io/badge/Status-Em_desenvolvimento-4F46E5?style=for-the-badge" alt="Status: em desenvolvimento" />
-    <img src="https://img.shields.io/badge/Vers%C3%A3o-0.3-4338CA?style=for-the-badge" alt="Versão 0.3" />
+    <img src="https://img.shields.io/badge/Vers%C3%A3o-0.4-C56744?style=for-the-badge" alt="Versão 0.4" />
     <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&amp;logo=python&amp;logoColor=white" alt="Python 3.10 ou superior" />
     <img src="https://img.shields.io/badge/Windows%20%7C%20Linux%20%7C%20Raspberry_Pi-111827?style=for-the-badge" alt="Windows, Linux e Raspberry Pi" />
     <img src="https://img.shields.io/badge/Rede-Local-334155?style=for-the-badge" alt="Rede local" />
   </p>
+</div>
+
+<div align="center">
+  <a href="screenshots/dashboard.png"><img src="screenshots/dashboard.png" width="92%" alt="Visão geral do Survival Server com atalhos para a biblioteca, acesso na rede e gestão de contas" /></a>
+  <br>
+  <sub>Visão geral do portal</sub>
 </div>
 
 ---
@@ -27,16 +33,50 @@ O projeto foi pensado para funcionar em **Windows, Linux e Raspberry Pi**. Após
 
 - **Biblioteca offline:** armazenamento e organização de PDFs, imagens, vídeos, mapas, arquivos ZIP e ZIM.
 - **Acesso pelo navegador:** interface disponível para computadores e dispositivos móveis conectados à mesma rede.
+- **Compartilhamento de endereço:** IPv4 da rede com botão de cópia, seleção manual e QR gerado no próprio portal.
 - **Controle de acesso:** login com perfis de **administrador** e **leitor**, com permissões distintas.
+- **Gestão de contas pelo navegador:** administradores podem criar usuários, alterar senhas e remover contas. Trocas de senha e exclusões encerram as sessões afetadas.
 - **Pesquisa no acervo:** busca por nome e descrição e, em formatos compatíveis, pelo conteúdo de arquivos de texto.
 - **Navegação paginada:** listagem e busca da biblioteca com **50 arquivos por página**.
 - **Plano familiar:** registro de contatos, pontos de encontro, rotas de evacuação, suprimentos e orientações de emergência.
 - **Editor do plano:** edição multilinha pelo administrador, com tratamento de falhas parciais no envio de arquivos.
 - **Integridade dos dados:** auditoria de arquivos usando **SHA-256** e diagnóstico de integridade do banco **SQLite**.
-- **Histórico administrativo:** registro local de logins, uploads, exclusões e alterações no plano.
+- **Histórico administrativo:** registro local de logins, operações de contas, uploads, exclusões de arquivos e alterações no plano.
 - **Manifesto JSON:** exportação do catálogo com informações como tamanho, categoria e hash dos arquivos.
 - **Backup e restauração:** exportação em ZIP, verificação de integridade e restauração validada.
 - **Importação de arquivos grandes:** suporte à importação de ZIM pela linha de comando.
+
+---
+
+## 📸 Capturas da interface
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <a href="screenshots/acesso-rede.png"><img src="screenshots/acesso-rede.png" width="100%" alt="Acesso na rede em desktop com endereço copiável e QR" /></a>
+      <br><sub>Acesso na rede · desktop</sub>
+    </td>
+    <td width="50%" align="center">
+      <a href="screenshots/contas.png"><img src="screenshots/contas.png" width="100%" alt="Gestão em desktop com lista de contas e formulário de criação" /></a>
+      <br><sub>Gestão de contas · desktop</sub>
+    </td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <a href="screenshots/mobile/acesso-rede.png"><img src="screenshots/mobile/acesso-rede.png" width="260" alt="Tela de conexão com endereço e código QR em um celular" /></a>
+      <br><sub>Acesso na rede · celular</sub>
+    </td>
+    <td width="50%" align="center">
+      <a href="screenshots/mobile/contas.png"><img src="screenshots/mobile/contas.png" width="260" alt="Lista de contas e formulário de criação adaptados para celular" /></a>
+      <br><sub>Gestão de contas · celular</sub>
+    </td>
+  </tr>
+</table>
+
+As capturas foram feitas no Edge com o portal em execução, contas de teste e endereço de rede ilustrativo no QR.
 
 ---
 
@@ -59,8 +99,10 @@ O projeto foi pensado para funcionar em **Windows, Linux e Raspberry Pi**. Após
 SurvivalServer/
 ├── .github/
 │   └── workflows/
-│       └── python-ci.yml         # Testes automatizados (adicionar)
+│       └── python-ci-survivalserver.yml
 ├── docs/                          # Documentação do projeto
+├── screenshots/                   # Capturas de desktop e celular
+├── static/                        # Portal e recursos empacotados
 ├── tests/                         # Testes automatizados
 ├── server.py                      # Servidor e comandos administrativos
 ├── iniciar_windows.bat            # Inicialização no Windows
@@ -68,7 +110,7 @@ SurvivalServer/
 └── README.md
 ```
 
-> A pasta `dados_survival` é utilizada para guardar os dados da instalação. Preserve-a ao atualizar ou migrar o servidor. O workflow em `.github/workflows/` é fornecido separadamente.
+> A pasta `dados_survival` guarda os dados da instalação. Preserve-a ao atualizar ou migrar o servidor.
 
 ---
 
@@ -111,13 +153,19 @@ No próprio equipamento servidor:
 http://127.0.0.1:8765
 ```
 
-Em outro dispositivo conectado à mesma rede:
+Para conectar outro dispositivo, faça login no servidor, abra **Acesso na rede** e copie o endereço ou escaneie o QR pela câmera do celular. Conecte os aparelhos ao mesmo Wi-Fi. Também é possível digitar o endereço mostrado no terminal do servidor.
 
 ```text
 http://IP_DO_COMPUTADOR:8765
 ```
 
-A porta padrão é **8765**. Para descobrir o IP local do servidor, use `ipconfig` no Windows ou `ip addr` no Linux. O terminal também pode exibir uma sugestão de endereço.
+A porta padrão é **8765**. Se o servidor listar mais de um IPv4, confira o endereço do adaptador Wi-Fi ou Ethernet usando `ipconfig` no Windows ou `ip -4 addr` no Linux. A aba **Acesso na rede** inclui passos de diagnóstico para firewall e redes de convidados.
+
+### 4. Gerencie o acesso da família
+
+Entre como administrador e abra **Contas**. Crie contas de leitura para quem só precisa consultar a biblioteca e o plano. A tela permite alterar a senha ou excluir uma conta, encerrando as sessões dela em outros dispositivos. Ao alterar a própria senha, entre novamente com a nova senha.
+
+As decisões sobre conectividade, permissões, acessibilidade e os próximos passos para HTTPS e mDNS estão na [pesquisa de arquitetura](docs/ARQUITETURA.md#pesquisa-aplicada-à-versão-04).
 
 ---
 
@@ -191,13 +239,13 @@ Antes de restaurar o servidor, recupere o ZIP com `unseal`, pare o Survival Serv
 
 ---
 
-## 🔄 Atualização para a versão 0.3
+## 🔄 Atualização para a versão 0.4
 
-Para atualizar instalações das versões **0.1 ou 0.2**:
+Para atualizar instalações das versões **0.1 a 0.3**:
 
 1. Pare a versão anterior com `Ctrl+C`.
 2. Faça uma cópia da pasta inteira `dados_survival` e gere um ZIP com `python server.py backup backup-versao-anterior.zip`.
-3. Extraia a versão 0.3 em outra pasta e copie `dados_survival` para a nova instalação.
+3. Extraia a versão 0.4 em outra pasta e copie `dados_survival` para a nova instalação.
 4. Inicie o servidor com `python server.py run --lan`; as migrações necessárias são aplicadas aos dados existentes.
 5. Verifique o acesso, os arquivos e o plano familiar. Depois execute `python server.py doctor`.
 
@@ -232,7 +280,7 @@ Execute os testes automatizados na raiz do projeto:
 python -m unittest discover -s tests -p 'test_*.py' -v
 ```
 
-O workflow `python-ci.yml`, fornecido separadamente, verifica a sintaxe e executa os testes em **Windows e Linux**, com **Python 3.10 e 3.12**.
+O workflow `python-ci-survivalserver.yml` verifica a sintaxe e executa os testes em **Windows e Linux**, com **Python 3.10 e 3.12**.
 
 ### Teste de interface (opcional)
 
@@ -242,7 +290,15 @@ O arquivo `tests/test_browser_smoke.py` usa **Playwright** para verificar fluxos
 python tests/test_browser_smoke.py --channel msedge
 ```
 
-Esse teste é opcional e requer o navegador e as dependências correspondentes preparados no ambiente.
+Para testar também pelo IPv4 do host e gerar as capturas do README, execute:
+
+```bash
+python tests/test_browser_smoke.py --channel msedge --lan --screenshots screenshots
+```
+
+O teste usa dados temporários e uma resolução de celular emulada. Para validar a rede local de destino, abra o portal em um celular físico enquanto o roteador estiver sem acesso à internet.
+
+O gerador de QR, [qrcode-generator 2.0.4](https://github.com/kazuhikoarase/qrcode-generator/releases/tag/js2.0.4), é distribuído com sua [licença MIT](static/vendor/qrcode-LICENSE.txt). O visual do painel foi gerado com ImageGen e é servido [como recurso local](static/images/network-hero.webp).
 
 ---
 

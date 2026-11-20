@@ -50,6 +50,8 @@ function showAuth(){
   fileRequest?.abort();
   uploadController?.abort();
   $('#shell').hidden=true;
+  toggleMenu(false);
+  document.dispatchEvent(new Event('survival:logout'));
   if (!$('#uploadModal').hidden) closeUploadModal();
   $('#loginScreen').hidden=false;
   $('#loginPassword').value='';
@@ -60,7 +62,7 @@ async function showApp(){
   $('#avatar').textContent=session.username.slice(0,1).toUpperCase();
   $all('.admin-only').forEach(el=>el.hidden=session.role!=='admin');
   await refresh();
-  if (session) showPage('home');
+  if (session) showPage('home', false);
 }
 async function refresh(){
   const refreshSession = session;
@@ -90,14 +92,34 @@ function drawDashboard(){
     nav.append(g,document.createTextNode(item.name));nav.addEventListener('click',()=>openCategory(item.name));quick.append(nav);
   });
 }
-function showPage(page){
+function toggleMenu(open){
+  $('#sidebar').classList.toggle('open', open);
+  $('#navScrim').hidden = !open;
+  $('#menuBtn').setAttribute('aria-expanded', String(open));
+  $('#menuBtn').setAttribute('aria-label', open ? 'Fechar menu' : 'Abrir menu');
+}
+function showPage(page, moveFocus = true){
+  const target = $(`#page-${page}`);
+  if (!target || target.hidden) return;
   $all('.page').forEach(el=>el.classList.toggle('active',el.id===`page-${page}`));
-  $all('[data-page]').forEach(el=>el.classList.toggle('active',el.dataset.page===page));
-  $('#breadcrumb').textContent={home:'VISÃO GERAL',library:'BIBLIOTECA',emergency:'PLANO FAMILIAR',health:'INTEGRIDADE',guide:'COMO CONECTAR'}[page]||page;
-  $('#sidebar').classList.remove('open');
+  $all('[data-page]').forEach(el=>{
+    const active = el.dataset.page === page;
+    el.classList.toggle('active', active);
+    if (active) el.setAttribute('aria-current', 'page');
+    else el.removeAttribute('aria-current');
+  });
+  $('#breadcrumb').textContent={home:'VISÃO GERAL',library:'BIBLIOTECA',emergency:'PLANO FAMILIAR',health:'INTEGRIDADE',guide:'ACESSO NA REDE',accounts:'CONTAS'}[page]||page;
+  toggleMenu(false);
   if(page==='library') loadFiles();
   if(page==='emergency') loadEmergency();
   if(page==='health' && session?.role==='admin') loadDiagnostics();
+  if(page==='guide') document.dispatchEvent(new CustomEvent('survival:network-open'));
+  if(page==='accounts') document.dispatchEvent(new CustomEvent('survival:accounts-open'));
+  if (moveFocus) {
+    const heading = target.querySelector('h1');
+    heading.tabIndex = -1;
+    heading.focus({preventScroll:true});
+  }
   window.scrollTo({top:0,behavior:'instant'});
 }
 function openCategory(category){
@@ -450,22 +472,30 @@ async function init(){
     $('#uploadFiles').files = event.dataTransfer.files;
     setUploadSelection($('#uploadFiles').files);
   });
-  $('#menuBtn').addEventListener('click',()=>$('#sidebar').classList.toggle('open'));
+  $('#menuBtn').addEventListener('click',()=>{
+    const open = !$('#sidebar').classList.contains('open');
+    toggleMenu(open);
+    if (open) $('#sidebar [aria-current="page"]').focus();
+  });
+  $('#navScrim').addEventListener('click',()=>{toggleMenu(false);$('#menuBtn').focus();});
+  document.addEventListener('keydown', event=>{
+    if(event.key==='Escape' && $('#sidebar').classList.contains('open')){
+      toggleMenu(false);
+      $('#menuBtn').focus();
+    }
+  });
   $('#refreshDiagnostic').addEventListener('click',loadDiagnostics);
   $('#verifyFiles').addEventListener('click',verifyAll);
   $('#exportManifest').addEventListener('click',exportManifest);
-  $('#currentUrl').textContent=location.origin;
-  $('#copyAddress').addEventListener('click',async()=>{
-    try{
-      if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(location.origin);}
-      else{
-        const helper=document.createElement('textarea');helper.value=location.origin;helper.style.position='fixed';helper.style.left='-9999px';document.body.append(helper);helper.select();
-        const ok=document.execCommand('copy');helper.remove();if(!ok)throw new Error('Clipboard não disponível');
-      }
-      toast('Endereço copiado');
-    }catch{toast(`Copie manualmente: ${location.origin}`);}
-  });
-  $('#clock').textContent=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase();
   try{const me=await api('/api/me');session=me.session;if(session)await showApp();else showAuth();}catch{showAuth();}
 }
 init();
+
+window.survivalQrMatrix = value => {
+  const encoder = qrcode(0, 'M');
+  encoder.addData(value);
+  encoder.make();
+  const count = encoder.getModuleCount();
+  return Array.from({length:count}, (_, row) =>
+    Array.from({length:count}, (_, column) => encoder.isDark(row, column)));
+};

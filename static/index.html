@@ -7,54 +7,61 @@
   <meta name="theme-color" content="#0b1018">
   <title>Survival Server — Biblioteca Offline</title>
   <link rel="stylesheet" href="/app.css">
+  <link rel="stylesheet" href="/portal.css">
+  <link rel="stylesheet" href="/network.css">
+  <script src="/vendor/qrcode.js" defer></script>
   <script src="/app.js" defer></script>
+  <script src="/network.js" defer></script>
+  <script src="/accounts.js" defer></script>
 </head>
 <body>
   <div class="app-shell" id="shell" hidden>
+    <button type="button" id="navScrim" class="nav-scrim" aria-hidden="true" tabindex="-1" hidden></button>
     <aside class="sidebar" id="sidebar">
       <div class="brand">
         <div class="brand-icon">S<span class="brand-dot">.</span></div>
-        <div class="brand-copy"><strong>SURVIVAL<span>SERVER</span></strong><small>SEU CONHECIMENTO. SEM INTERNET.</small></div>
+        <div class="brand-copy"><strong>Survival Server</strong><small>Biblioteca offline</small></div>
       </div>
       <p class="nav-caption">MENU PRINCIPAL</p>
       <nav class="navigation" aria-label="Menu principal">
-        <button class="nav-link active" data-page="home"><span class="nav-emoji">◫</span> Visão geral</button>
-        <button class="nav-link" data-page="library"><span class="nav-emoji">▤</span> Biblioteca</button>
-        <button class="nav-link" data-page="emergency"><span class="nav-emoji">✚</span> Plano familiar</button>
-        <button class="nav-link admin-only" data-page="health" hidden><span class="nav-emoji">⛨</span> Integridade e auditoria</button>
-        <button class="nav-link" data-page="guide"><span class="nav-emoji">◈</span> Como conectar</button>
+        <button class="nav-link active" data-page="home" aria-current="page"><span class="nav-emoji" aria-hidden="true">◫</span> Visão geral</button>
+        <button class="nav-link" data-page="library"><span class="nav-emoji" aria-hidden="true">▤</span> Biblioteca</button>
+        <button class="nav-link" data-page="emergency"><span class="nav-emoji" aria-hidden="true">✚</span> Plano familiar</button>
+        <button class="nav-link" data-page="guide"><span class="nav-emoji" aria-hidden="true">⌁</span> Acesso na rede</button>
+        <button class="nav-link admin-only" data-page="accounts" hidden><span class="nav-emoji" aria-hidden="true">◎</span> Contas</button>
+        <button class="nav-link admin-only" data-page="health" hidden><span class="nav-emoji" aria-hidden="true">⛨</span> Integridade e auditoria</button>
       </nav>
       <p class="nav-caption cat-label">ACESSO RÁPIDO</p>
       <nav class="navigation" id="quickCats" aria-label="Categorias"></nav>
       <div class="sidebar-bottom">
-        <div class="status-panel"><span class="glow-dot"></span><div><strong>REDE LOCAL ATIVA</strong><small>Sem serviços externos</small></div></div>
         <div class="account"><div class="avatar" id="avatar">A</div><div class="account-copy"><strong id="username">—</strong><small id="userrole">—</small></div><button class="icon-btn" id="logout" title="Sair da conta" aria-label="Sair da conta">↪</button></div>
       </div>
     </aside>
     <div class="main-area">
       <header class="topbar">
-        <button class="icon-btn mobile-menu" id="menuBtn" aria-label="Abrir menu">☰</button>
+        <button class="icon-btn mobile-menu" id="menuBtn" aria-label="Abrir menu" aria-controls="sidebar" aria-expanded="false">☰</button>
         <div class="breadcrumb">CENTRAL / <span id="breadcrumb">VISÃO GERAL</span></div>
-        <div class="top-actions"><span class="offline-badge"><span class="mini-dot"></span> 100% OFFLINE</span><span id="clock" class="clock"></span></div>
+        <div class="top-actions"><span class="offline-badge"><span class="mini-dot" aria-hidden="true"></span> REDE LOCAL</span></div>
       </header>
       <main class="content">
         <section id="page-home" class="page active">
-          <div class="intro-line">SUA CENTRAL DE CONHECIMENTO LOCAL</div>
-          <div class="intro-grid">
-            <div><h1>Prepare-se para <span>qualquer cenário.</span></h1><p>Seus manuais, documentos, mapas e informações importantes, disponíveis para sua família mesmo quando a internet não está.</p></div>
-            <div class="hero-seal" aria-hidden="true"><span>◈</span><small>SURVIVAL<br>READY</small></div>
+          <div class="portal-hero">
+            <div class="portal-hero-content">
+              <h1>Sua biblioteca <span>offline.</span></h1>
+              <p>Manuais, mapas e o plano da família à mão, em qualquer dispositivo na mesma rede.</p>
+              <div class="portal-actions">
+                <button class="primary-button" data-go="library">Abrir biblioteca <span aria-hidden="true">→</span></button>
+                <button class="secondary-button" data-go="guide">Conectar dispositivo</button>
+              </div>
+            </div>
           </div>
           <div class="stats-grid">
             <div class="stat-card"><div class="stat-icon red">▤</div><span>ARQUIVOS NA BASE</span><strong id="statFiles">0</strong><small>Materiais disponíveis</small></div>
             <div class="stat-card"><div class="stat-icon amber">▣</div><span>ESPAÇO UTILIZADO</span><strong id="statBytes">0 B</strong><small>Armazenamento local</small></div>
-            <div class="stat-card"><div class="stat-icon green">⌁</div><span>STATUS DE ACESSO</span><strong>ONLINE LOCAL</strong><small>Internet não é necessária</small></div>
+            <button class="stat-card portal-stat-link admin-only" data-go="accounts" hidden><span class="stat-icon green" aria-hidden="true">◎</span><span>ADMINISTRAÇÃO</span><strong>Contas e acessos <span aria-hidden="true">↗</span></strong></button>
           </div>
           <div class="section-row"><div><h2>Biblioteca de sobrevivência</h2><p>Explore seus arquivos por categoria</p></div><button class="text-btn" data-go="library">Ver biblioteca completa →</button></div>
           <div class="category-grid" id="categoryGrid"></div>
-          <div class="feature-grid">
-            <div class="feature-card"><div class="feature-head"><span class="feature-ico">⌘</span><span class="eyebrow">COMO FUNCIONA</span></div><h3>Um servidor. Vários aparelhos.</h3><p>Conecte celulares e notebooks ao mesmo Wi-Fi local e abra o endereço do servidor no navegador.</p><button class="text-btn" data-go="guide">Ver instruções →</button></div>
-            <div class="feature-card secondary"><div class="feature-head"><span class="feature-ico">⛨</span><span class="eyebrow">PRIVACIDADE</span></div><h3>Dados guardados com você.</h3><p>Sem contas na nuvem, rastreamento ou dependência de APIs. Use apenas uma rede confiável: o HTTP local não cifra a conexão.</p></div>
-          </div>
         </section>
         <section id="page-library" class="page">
           <div class="section-row library-head"><div><div class="intro-line">ARQUIVOS LOCAIS</div><h1>Sua <span>biblioteca.</span></h1><p>Pesquise pelo nome, descrição ou pelo conteúdo de textos e arquivos Markdown.</p></div><button id="uploadButton" class="primary-button admin-only" hidden>＋ Adicionar arquivo</button></div>
@@ -86,20 +93,47 @@
           <h2>Últimas atividades administrativas</h2><div id="auditList" class="audit-list"></div>
         </section>
         <section id="page-guide" class="page">
-          <div class="intro-line">ACESSO ENTRE APARELHOS</div><h1>Conecte sua <span>família.</span></h1><p class="lead">O servidor funciona sem internet, mas os dispositivos devem estar conectados à mesma rede local.</p>
-          <div class="step-grid">
-            <article class="step"><span>01</span><h3>Inicie o servidor</h3><p>No computador ou Raspberry Pi, execute <code>python server.py run --lan</code>. Deixe o equipamento ligado.</p></article>
-            <article class="step"><span>02</span><h3>Entre no mesmo Wi-Fi</h3><p>Conecte os celulares e notebooks ao mesmo roteador ou ponto de acesso local. O roteador não precisa ter internet.</p></article>
-            <article class="step"><span>03</span><h3>Abra o endereço</h3><p>No navegador de cada celular, digite o endereço IPv4 mostrado no terminal do servidor, como <code>http://192.168.1.10:8765</code>.</p></article>
-            <article class="step"><span>04</span><h3>Use a conta de leitura</h3><p>O usuário <code>familia</code>, se criado, pode consultar e baixar arquivos. Somente administradores podem adicionar ou apagar.</p></article>
+          <div class="portal-page-heading"><h1>Acesso na <span>rede</span></h1><p class="lead">Conecte os outros dispositivos ao mesmo Wi-Fi do servidor.</p></div>
+          <div id="networkAccessDynamic"></div>
+          <details class="portal-details">
+            <summary>O endereço não abre em outro dispositivo</summary>
+            <ul>
+              <li>Confirme que o servidor está ligado e foi iniciado com <code>python server.py run --lan</code>.</li>
+              <li>Use o mesmo roteador nos dois aparelhos. Redes de convidados podem impedir o acesso entre dispositivos.</li>
+              <li>No firewall do servidor, permita a porta configurada apenas na rede local confiável.</li>
+              <li>Se houver mais de um endereço, confirme o IPv4 da conexão Wi-Fi ou Ethernet com <code>ipconfig</code> no Windows ou <code>ip -4 addr</code> no Linux.</li>
+            </ul>
+          </details>
+          <p class="portal-local-note">O acesso usa HTTP. Use uma rede de confiança e mantenha o servidor fora da internet pública.</p>
+        </section>
+        <section id="page-accounts" class="page admin-only" hidden>
+          <div class="portal-page-heading"><h1>Contas e <span>acessos</span></h1><p class="lead">Gerencie quem pode consultar ou administrar o servidor nos dispositivos da rede.</p></div>
+          <p id="accountsStatus" class="accounts-status" role="status" hidden></p>
+          <div class="accounts-grid">
+            <section class="portal-card" aria-labelledby="accounts-list-title">
+              <div class="portal-card-heading"><h2 id="accounts-list-title">Usuários</h2><button type="button" id="reloadAccounts" class="secondary-button">Atualizar</button></div>
+              <ul id="accountRows" class="account-rows" aria-busy="false"></ul>
+            </section>
+            <section class="portal-card" aria-labelledby="accounts-create-title">
+              <div class="portal-card-heading"><h2 id="accounts-create-title">Nova conta</h2></div>
+              <form id="accountsCreate" class="portal-form" method="post" action="/api/users">
+                <label for="accountUsername">Usuário</label>
+                <input id="accountUsername" name="username" autocomplete="off" required minlength="3" maxlength="32" spellcheck="false" aria-describedby="accountUsernameHelp">
+                <small id="accountUsernameHelp">De 3 a 32 caracteres. Use letras sem acento, números, ponto, hífen ou sublinhado.</small>
+                <label for="accountPassword">Senha inicial</label>
+                <input id="accountPassword" name="password" type="password" autocomplete="new-password" required minlength="10" maxlength="256" aria-describedby="accountPasswordHelp">
+                <small id="accountPasswordHelp">Pelo menos 10 caracteres.</small>
+                <label for="accountRole">Permissão</label>
+                <select id="accountRole" name="role"><option value="leitor">Leitor</option><option value="admin">Administrador</option></select>
+                <small>Leitores consultam a biblioteca e o plano. Administradores também podem alterá-los e gerenciar contas.</small>
+                <p id="accountCreateError" class="form-error" role="alert" hidden></p>
+                <button type="submit" class="primary-button">Criar conta</button>
+              </form>
+            </section>
           </div>
-          <div class="address-panel"><div><small>ENDEREÇO DESTA SESSÃO</small><strong id="currentUrl">—</strong><p>Se estiver em outro aparelho, o IP pode ser diferente. Use o IP exibido no servidor.</p></div><button class="secondary-button" id="copyAddress">Copiar</button></div>
-          <div class="warning-box"><strong>⚠ Segurança importante</strong><p>Este protótipo funciona por HTTP na rede local: senhas e dados em trânsito não têm criptografia de transporte. Use rede Wi-Fi confiável com WPA2/WPA3 e não exponha a porta 8765 à internet. Não coloque senhas bancárias ou documentos sensíveis neste servidor: para isso, prefira um cofre local criptografado.</p></div>
-          <div class="section-row"><h2>Wikipédia offline com ZIM</h2></div><p>Arquivos <code>.zim</code> podem ser importados na biblioteca e baixados em outros aparelhos. Para ler os artigos diretamente no navegador da rede, instale e execute o <strong>kiwix-serve</strong> separadamente, apontando para a pasta que contém os arquivos ZIM originais.</p>
-          <div class="cli-block"><code>kiwix-serve --port=8080 /caminho/para/arquivos.zim</code><span>Exemplo ilustrativo no Linux</span></div>
         </section>
       </main>
-      <footer class="footer"><span>SURVIVAL SERVER <b>0.3</b></span><span>Desenvolvido para uso offline · Python + SQLite</span></footer>
+      <footer class="footer"><span>Survival Server <b>0.4</b></span><span>Python · SQLite</span></footer>
     </div>
   </div>
 
@@ -133,6 +167,17 @@
       </form>
     </div>
   </div>
+  <dialog id="accountPasswordDialog" class="portal-dialog" aria-labelledby="accountPasswordTitle">
+    <h2 id="accountPasswordTitle">Alterar senha</h2>
+    <p>As sessões abertas dessa conta serão encerradas.</p>
+    <form id="accountPasswordForm" class="portal-form" method="dialog">
+      <label for="newAccountPassword">Nova senha</label>
+      <input id="newAccountPassword" type="password" autocomplete="new-password" required minlength="10" maxlength="256" aria-describedby="newAccountPasswordHelp">
+      <small id="newAccountPasswordHelp">Pelo menos 10 caracteres.</small>
+      <p id="accountPasswordError" class="form-error" role="alert" hidden></p>
+      <div class="portal-actions"><button type="button" id="cancelAccountPassword" class="secondary-button">Cancelar</button><button type="submit" class="primary-button">Salvar senha</button></div>
+    </form>
+  </dialog>
   <div class="toast-container" id="toastContainer" aria-live="polite"></div>
 </body>
 </html>

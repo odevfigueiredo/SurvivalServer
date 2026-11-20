@@ -6,6 +6,7 @@ import os
 import tempfile
 import threading
 import unittest
+from unittest import mock
 import urllib.error
 import urllib.request
 import zipfile
@@ -27,6 +28,17 @@ class _DataTestCase(unittest.TestCase):
 
 
 class CoreTests(_DataTestCase):
+    def test_network_announces_private_addresses_and_real_port(self):
+        interfaces = ['192.168.1.9', '192.168.1.9', '10.0.0.4', '127.0.0.1', '0.0.0.0', '8.8.8.8']
+        with mock.patch.object(core, 'local_ipv4_addresses', return_value=interfaces):
+            access = core.access_info(('0.0.0.0', 9876), '10.0.0.4')
+        self.assertTrue(access['lan_enabled'])
+        self.assertEqual(access['access_urls'], [
+            {'url': 'http://10.0.0.4:9876', 'kind': 'lan'},
+            {'url': 'http://192.168.1.9:9876', 'kind': 'lan'},
+            {'url': 'http://127.0.0.1:9876', 'kind': 'loopback'},
+        ])
+
     def test_password_roles(self):
         self.assertIsNone(core.check_password(self.path,'admin','errada'))
         self.assertEqual(core.check_password(self.path,'familia','Familia!Senha123')['role'],'leitor')
@@ -149,6 +161,18 @@ class HttpTests(_DataTestCase):
         self.assertEqual(self.request('/api/stats')[0],200)
         self.csrf='errado'
         self.assertEqual(self.request('/api/logout','POST',check=False)[0],403)
+
+    def test_access_requires_login_and_distinguishes_loopback(self):
+        self.assertEqual(self.request('/api/access', check=False)[0], 401)
+        self.login('familia', 'Familia!Senha123')
+        status, access = self.request('/api/access')
+        self.assertEqual(status, 200)
+        self.assertEqual(access, {
+            'lan_enabled': False,
+            'scheme': 'http',
+            'port': self.srv.server_port,
+            'access_urls': [{'url': self.base, 'kind': 'loopback'}],
+        })
 
     def test_origin_and_host(self):
         self.login()

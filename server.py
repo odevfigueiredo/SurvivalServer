@@ -31,9 +31,20 @@ from http.cookies import SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-APP_VERSION = "0.3.0"
+APP_VERSION = "0.4.0"
 ROOT = Path(__file__).resolve().parent
 DEFAULT_DATA = ROOT / "dados_survival"
+STATIC_TYPES = {
+    "index.html": "text/html; charset=utf-8",
+    "app.css": "text/css; charset=utf-8",
+    "portal.css": "text/css; charset=utf-8",
+    "network.css": "text/css; charset=utf-8",
+    "app.js": "application/javascript; charset=utf-8",
+    "network.js": "application/javascript; charset=utf-8",
+    "accounts.js": "application/javascript; charset=utf-8",
+    "vendor/qrcode.js": "application/javascript; charset=utf-8",
+    "images/network-hero.webp": "image/webp",
+}
 PBKDF2_ROUNDS = 350_000
 SESSION_SECONDS = 8 * 3600
 MAX_JSON = 16 * 1024
@@ -188,26 +199,53 @@ def password_hash(password, salt):
     return hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), bytes.fromhex(salt), PBKDF2_ROUNDS).hex()
 
 
-def add_user(data, username, password, role="leitor"):
-    validate_username(username)
+def new_password_digest(password):
     validate_password(password)
+    salt = secrets.token_hex(16)
+    try:
+        return salt, password_hash(password, salt)
+    except UnicodeEncodeError as exc:
+        raise ValueError("Senha contém caracteres inválidos") from exc
+
+
+def validate_role(role):
     if role not in ("admin", "leitor"):
         raise ValueError("Papel invalido")
-    salt = secrets.token_hex(16)
-    digest = password_hash(password, salt)
+    return role
+
+
+def insert_user(con, username, salt, digest, role):
+    con.execute(
+        "INSERT INTO users(username,salt,password_hash,role,created_at) VALUES (?,?,?,?,?)",
+        (username, salt, digest, role, utc_ts()),
+    )
+
+
+def add_user(data, username, password, role="leitor"):
+    validate_username(username)
+    validate_role(role)
+    salt, digest = new_password_digest(password)
     with contextlib.closing(connect(data)) as con:
-        con.execute("INSERT INTO users VALUES (?,?,?,?,?)", (username, salt, digest, role, utc_ts()))
+        insert_user(con, username, salt, digest, role)
         con.commit()
 
 
-def check_password(data, username, password):
+def verified_user(con, username, password):
     if not isinstance(username, str) or not isinstance(password, str) or len(password) > 256:
         return None
-    with contextlib.closing(connect(data)) as con:
-        row = con.execute("SELECT username,salt,password_hash,role FROM users WHERE username=?", (username,)).fetchone()
-    if row and hmac.compare_digest(password_hash(password, row["salt"]), row["password_hash"]):
-        return {"username": row["username"], "role": row["role"]}
+    try:
+        user = con.execute("SELECT username,salt,password_hash,role FROM users WHERE username=?", (username,)).fetchone()
+        if user and hmac.compare_digest(password_hash(password, user["salt"]), user["password_hash"]):
+            return user
+    except UnicodeEncodeError:
+        pass
     return None
+
+
+def check_password(data, username, password):
+    with contextlib.closing(connect(data)) as con:
+        user = verified_user(con, username, password)
+    return {"username": user["username"], "role": user["role"]} if user else None
 
 
 def safe_filename(filename):
@@ -631,7 +669,7 @@ class SurvivalHandler(BaseHTTPRequestHandler):
             raise ApiError(400, "JSON deve ser um objeto")
         return obj
 
-    def _session(self, required=True, admin=False, csrf=False):
+    def _session(self, required=True, admin=False, csrf=False, *, connection=None):
         cookie = SimpleCookie()
         try:
             cookie.load(self.headers.get("Cookie", ""))
@@ -644,7 +682,8 @@ class SurvivalHandler(BaseHTTPRequestHandler):
                 raise ApiError(401, "Faça login para continuar")
             return None
         digest = hashlib.sha256(token.encode("ascii", errors="ignore")).hexdigest()
-        with contextlib.closing(connect(self.server.data_dir)) as con:
+        db = contextlib.nullcontext(connection) if connection is not None else contextlib.closing(connect(self.server.data_dir))
+        with db as con:
             row = con.execute("SELECT sessions.csrf,sessions.expires_at,users.username,users.role FROM sessions JOIN users ON sessions.username=users.username WHERE digest=?", (digest,)).fetchone()
         if not row or row["expires_at"] <= utc_ts():
             if required:
@@ -652,8 +691,10 @@ class SurvivalHandler(BaseHTTPRequestHandler):
             return None
         if admin and row["role"] != "admin":
             raise ApiError(403, "Somente administradores")
-        if csrf and not hmac.compare_digest(self.headers.get("X-CSRF-Token", ""), row["csrf"]):
-            raise ApiError(403, "Token CSRF ausente ou invalido")
+        if csrf:
+            csrf_token = self.headers.get("X-CSRF-Token", "")
+            if not csrf_token.isascii() or not hmac.compare_digest(csrf_token, row["csrf"]):
+                raise ApiError(403, "Token CSRF ausente ou invalido")
         return {"username": row["username"], "role": row["role"], "csrf": row["csrf"], "digest": digest}
 
     def _route(self, method):
@@ -664,8 +705,9 @@ class SurvivalHandler(BaseHTTPRequestHandler):
         parsed = urllib.parse.urlsplit(self.path)
         path = parsed.path
         params = urllib.parse.parse_qs(parsed.query)
-        if method == "GET" and path in ("/", "/index.html", "/app.css", "/app.js"):
-            return self._static("index.html" if path == "/" else path.lstrip("/"))
+        asset = "index.html" if path == "/" else path[1:]
+        if method == "GET" and asset in STATIC_TYPES:
+            return self._static(asset)
         if method == "GET" and path == "/api/health":
             return self._json(200, {"ok": True, "name": "Survival Server", "version": APP_VERSION})
         if method == "POST" and path == "/api/login":
@@ -679,7 +721,23 @@ class SurvivalHandler(BaseHTTPRequestHandler):
                 con.execute("DELETE FROM sessions WHERE digest=?", (session["digest"],))
                 con.commit()
             return self._json(200, {"ok": True}, {"Set-Cookie": "survival_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0"})
+        if path == "/api/users":
+            if method == "GET":
+                self._session(admin=True)
+                with contextlib.closing(connect(self.server.data_dir)) as con:
+                    users = [dict(user) for user in con.execute(
+                        "SELECT username,role,created_at FROM users ORDER BY username"
+                    )]
+                return self._json(200, {"users": users})
+            if method == "POST":
+                return self._manage_user(method)
+        if method in ("PUT", "DELETE"):
+            user_path = re.fullmatch(r"/api/users/([^/]+)(/password)?", path)
+            if user_path and ((method == "PUT") == bool(user_path[2])):
+                return self._manage_user(method, urllib.parse.unquote(user_path[1]))
         self._session()
+        if method == "GET" and path == "/api/access":
+            return self._json(200, access_info(self.server.server_address, self.connection.getsockname()[0]))
         if method == "GET" and path == "/api/stats":
             return self._json(200, stats(self.server.data_dir))
         if method == "GET" and path == "/api/emergency":
@@ -749,13 +807,10 @@ class SurvivalHandler(BaseHTTPRequestHandler):
         raise ApiError(404, "Recurso nao encontrado")
 
     def _static(self, name):
-        if name not in ("index.html", "app.css", "app.js"):
-            raise ApiError(404, "Nao encontrado")
         path = ROOT / "static" / name
         content = path.read_bytes()
-        ctype = {"index.html": "text/html; charset=utf-8", "app.css": "text/css; charset=utf-8", "app.js": "application/javascript; charset=utf-8"}[name]
         csp = "default-src 'self'; connect-src 'self'; img-src 'self' blob: data:; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
-        self._headers(200, ctype, len(content), {"Content-Security-Policy": csp})
+        self._headers(200, STATIC_TYPES[name], len(content), {"Content-Security-Policy": csp})
         self.wfile.write(content)
 
     def _login(self):
@@ -763,20 +818,78 @@ class SurvivalHandler(BaseHTTPRequestHandler):
         if self.server.login_limiter.is_blocked(ip):
             raise ApiError(429, "Muitas tentativas. Aguarde cinco minutos")
         obj = self._body_json()
-        user = check_password(self.server.data_dir, obj.get("username"), obj.get("password"))
-        if not user:
-            self.server.login_limiter.fail(ip)
-            raise ApiError(401, "Usuario ou senha incorretos")
-        self.server.login_limiter.clear(ip)
-        audit(self.server.data_dir, user["username"], "login", "successful")
         token = secrets.token_urlsafe(32)
         csrf = secrets.token_urlsafe(32)
-        with contextlib.closing(connect(self.server.data_dir)) as con:
-            con.execute("DELETE FROM sessions WHERE expires_at<=?", (utc_ts(),))
-            con.execute("INSERT INTO sessions(digest,username,csrf,expires_at) VALUES (?,?,?,?)", (hashlib.sha256(token.encode()).hexdigest(), user["username"], csrf, utc_ts() + SESSION_SECONDS))
-            con.commit()
+        with contextlib.closing(connect(self.server.data_dir)) as con, con:
+            user = verified_user(con, obj.get("username"), obj.get("password"))
+            if not user:
+                self.server.login_limiter.fail(ip)
+                raise ApiError(401, "Usuario ou senha incorretos")
+            now = utc_ts()
+            con.execute("DELETE FROM sessions WHERE expires_at<=?", (now,))
+            # A password change or account deletion may have committed during verification.
+            inserted = con.execute(
+                "INSERT INTO sessions(digest,username,csrf,expires_at) "
+                "SELECT ?,username,?,? FROM users WHERE username=? AND salt=? AND password_hash=?",
+                (hashlib.sha256(token.encode()).hexdigest(), csrf, now + SESSION_SECONDS,
+                 user["username"], user["salt"], user["password_hash"]),
+            )
+            if not inserted.rowcount:
+                self.server.login_limiter.fail(ip)
+                raise ApiError(401, "Usuario ou senha incorretos")
+            record_audit(con, user["username"], "login", "successful")
+        self.server.login_limiter.clear(ip)
         cookie = f"survival_session={token}; HttpOnly; SameSite=Strict; Path=/; Max-Age={SESSION_SECONDS}"
         return self._json(200, {"username": user["username"], "role": user["role"]}, {"Set-Cookie": cookie})
+
+    def _manage_user(self, method, username=None):
+        self._session(admin=True, csrf=True)
+        body = self._body_json() if method in ("POST", "PUT") else {}
+        try:
+            username = validate_username(body.get("username") if method == "POST" else username)
+            if method == "POST":
+                role = validate_role(body.get("role"))
+            if method in ("POST", "PUT"):
+                salt, digest = new_password_digest(body.get("password"))
+        except ValueError as exc:
+            raise ApiError(400, str(exc)) from exc
+
+        with contextlib.closing(connect(self.server.data_dir)) as con, con:
+            con.execute("BEGIN IMMEDIATE")
+            actor = self._session(admin=True, csrf=True, connection=con)["username"]
+            target = con.execute("SELECT role FROM users WHERE username=?", (username,)).fetchone()
+            if method == "POST":
+                if target:
+                    raise ApiError(409, "Já existe uma conta com este usuário")
+                insert_user(con, username, salt, digest, role)
+                action = "user_create"
+            else:
+                if not target:
+                    raise ApiError(404, "Usuário não encontrado")
+                if method == "PUT":
+                    con.execute("UPDATE users SET salt=?, password_hash=? WHERE username=?", (salt, digest, username))
+                    action = "user_password"
+                else:
+                    if username == actor:
+                        raise ApiError(409, "Você não pode excluir a conta em uso")
+                    if target["role"] == "admin":
+                        remaining_admins = con.execute(
+                            "SELECT COUNT(*) FROM users WHERE role='admin' AND username<>?", (username,)
+                        ).fetchone()[0]
+                        if not remaining_admins:
+                            raise ApiError(409, "Mantenha pelo menos um administrador")
+                    con.execute("DELETE FROM users WHERE username=?", (username,))
+                    action = "user_delete"
+                con.execute("DELETE FROM sessions WHERE username=?", (username,))
+            record_audit(con, actor, action, username)
+
+        if method == "POST":
+            return self._json(201, {"ok": True})
+        if method == "PUT":
+            reauthenticate = username == actor
+            headers = {"Set-Cookie": "survival_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0"} if reauthenticate else None
+            return self._json(200, {"ok": True, "reauthenticate": reauthenticate}, headers)
+        return self._json(200, {"ok": True})
 
     def _upload(self, params, username):
         filename = params.get("filename", [""])[0]
@@ -887,13 +1000,39 @@ class SurvivalHandler(BaseHTTPRequestHandler):
         self._safe_dispatch("DELETE")
 
 
-def local_address():
+def local_ipv4_addresses():
+    candidates = []
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            # Asks the OS for a route and source address without sending a packet.
             s.connect(("192.0.2.1", 9))
-            return s.getsockname()[0]
+            candidates.append(s.getsockname()[0])
     except OSError:
-        return "<IP_LOCAL>"
+        pass
+    try:
+        addresses = socket.getaddrinfo(socket.gethostname(), None, socket.AF_INET, socket.SOCK_STREAM)
+        candidates.extend(address[4][0] for address in addresses)
+    except OSError:
+        pass
+    return candidates
+
+
+def access_info(binding, connection_host=None):
+    host, port = binding
+    wildcard = host == "0.0.0.0"
+    lan_enabled = not ipaddress.IPv4Address(host).is_loopback
+    candidates = [connection_host, *local_ipv4_addresses()] if wildcard else [host]
+    addresses = []
+    for candidate in dict.fromkeys(candidates):
+        if not candidate:
+            continue
+        ip = ipaddress.IPv4Address(candidate)
+        if (ip.is_private or ip.is_link_local) and not (ip.is_loopback or ip.is_unspecified or ip.is_reserved):
+            addresses.append({"url": f"http://{ip}:{port}", "kind": "lan"})
+    if wildcard or not lan_enabled:
+        loopback = "127.0.0.1" if wildcard else host
+        addresses.append({"url": f"http://{loopback}:{port}", "kind": "loopback"})
+    return {"access_urls": addresses, "lan_enabled": lan_enabled, "scheme": "http", "port": port}
 
 
 def main(argv=None):
@@ -983,9 +1122,12 @@ def run_command(p, args, data):
             host = args.host or ("0.0.0.0" if args.lan else "127.0.0.1")
             server = SurvivalHTTPServer((host, args.port), data, args.max_upload_mb)
             print(f"\nSURVIVAL SERVER {APP_VERSION}")
-            print(f"Este computador: http://127.0.0.1:{args.port}")
-            if host != "127.0.0.1":
-                print(f"Outros aparelhos na mesma rede: http://{local_address()}:{args.port}")
+            access = access_info(server.server_address)
+            for entry in access["access_urls"]:
+                label = "Rede local" if entry["kind"] == "lan" else "Este computador"
+                print(f"{label}: {entry['url']}")
+            if access["lan_enabled"] and not any(entry["kind"] == "lan" for entry in access["access_urls"]):
+                print("Nenhum IPv4 local encontrado. Consulte ipconfig (Windows) ou ip -4 addr (Linux).")
             print("AVISO: HTTP local nao e criptografado. Use somente Wi-Fi de confianca; NUNCA exponha a internet.")
             print("Para parar: Ctrl+C\n")
             try:
